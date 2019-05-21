@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t ethomatos/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run ethomatos/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t ethomatos/multi-client ./client
+  - docker build -t ethomatos/multi-nginx ./nginx
+  - docker build -t ethomatos/multi-server ./server
+  - docker build -t ethomatos/multi-worker ./worker
+  # Log into Docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take images and push to docker hub
+  - docker push ethomatos/multi-client
+  - docker push ethomatos/multi-nginx
+  - docker push ethomatos/multi-server
+  - docker push ethomatos/multi-worker
